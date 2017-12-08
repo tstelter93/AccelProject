@@ -93,14 +93,15 @@ public class MainActivity extends Activity implements SensorEventListener {
         float accelationSquareRoot = (x * x + y * y + z * z)
                 / (SensorManager.GRAVITY_EARTH * SensorManager.GRAVITY_EARTH);
         long actualTime = event.timestamp;
-        if (accelationSquareRoot >= 2) //
+        if (accelationSquareRoot >= 1.6) //
         {
             if (actualTime - lastUpdate < 200) {
                 return;
             }
             lastUpdate = actualTime;
-            Toast.makeText(this, "Device was shuffed", Toast.LENGTH_SHORT)
-                    .show();
+//            Toast.makeText(this, "Device was shuffed", Toast.LENGTH_SHORT)
+//                    .show();
+            // Place Camera init code here
             if (color) {
                 view.setBackgroundColor(Color.GREEN);
             } else {
