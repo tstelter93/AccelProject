@@ -7,6 +7,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -17,6 +19,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import java.util.concurrent.TimeUnit;
+
 public class MainActivity extends Activity implements SensorEventListener {
 
     private TextView mTextMessage;
@@ -25,27 +29,28 @@ public class MainActivity extends Activity implements SensorEventListener {
     private boolean color = false;
     private View view;
     private long lastUpdate;
+    private boolean timeDelay;
 
 
-    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
-            = new BottomNavigationView.OnNavigationItemSelectedListener() {
-
-        @Override
-        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            switch (item.getItemId()) {
-                case R.id.navigation_home:
-                    mTextMessage.setText(R.string.title_home);
-                    return true;
-                case R.id.navigation_dashboard:
-                    mTextMessage.setText(R.string.title_dashboard);
-                    return true;
-                case R.id.navigation_notifications:
-                    mTextMessage.setText(R.string.title_notifications);
-                    return true;
-            }
-            return false;
-        }
-    };
+//    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
+//            = new BottomNavigationView.OnNavigationItemSelectedListener() {
+//
+//        @Override
+//        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+//            switch (item.getItemId()) {
+//                case R.id.navigation_home:
+//                    mTextMessage.setText(R.string.title_home);
+//                    return true;
+//                case R.id.navigation_dashboard:
+//                    mTextMessage.setText(R.string.title_dashboard);
+//                    return true;
+//                case R.id.navigation_notifications:
+//                    mTextMessage.setText(R.string.title_notifications);
+//                    return true;
+//            }
+//            return false;
+//        }
+//    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +64,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         accVals = findViewById(R.id.accVals);
         view = findViewById(R.id.textView);
         view.setBackgroundColor(Color.GREEN);
+        timeDelay = false;
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         lastUpdate = System.currentTimeMillis();
@@ -74,7 +80,11 @@ public class MainActivity extends Activity implements SensorEventListener {
             float[] move = sensorEvent.values;
             accVals.setText(String.valueOf(move));
             // Movement
-            getAccelerometer(sensorEvent);
+            try {
+                getAccelerometer(sensorEvent);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -83,31 +93,39 @@ public class MainActivity extends Activity implements SensorEventListener {
         //Leave Blank
     }
 
-    private void getAccelerometer(SensorEvent event) {
+    private void getAccelerometer(SensorEvent event) throws InterruptedException {
         float[] values = event.values;
         // Movement
         float x = values[0];
         float y = values[1];
         float z = values[2];
 
+        // Speed
         float accelationSquareRoot = (x * x + y * y + z * z)
                 / (SensorManager.GRAVITY_EARTH * SensorManager.GRAVITY_EARTH);
+        Log.d("Accelation", String.valueOf(accelationSquareRoot));
         long actualTime = event.timestamp;
-        if (accelationSquareRoot >= 1.6) //
+        if (accelationSquareRoot <= 0.88) // if accel value is under .88 TAKE PICTURE
         {
+            timeDelay = true;
             if (actualTime - lastUpdate < 200) {
                 return;
             }
             lastUpdate = actualTime;
-//            Toast.makeText(this, "Device was shuffed", Toast.LENGTH_SHORT)
-//                    .show();
-            // Place Camera init code here
+
+            // Place Camera init code here and remove color stuff.
             if (color) {
                 view.setBackgroundColor(Color.GREEN);
             } else {
                 view.setBackgroundColor(Color.RED);
             }
             color = !color;
+
+            // pause for 1 second
+            if(timeDelay) {
+                TimeUnit.SECONDS.sleep(1);
+                timeDelay = false;
+            }
         }
 
     }
