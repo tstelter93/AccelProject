@@ -98,10 +98,12 @@ public class MainActivity extends Activity implements SensorEventListener {
                     mCamera.takePicture(null, null, mPicture);
                     safeToTakePicture = false;
                     lastTriggerMillis = currentMillis;
+                    mPreview.destroyDrawingCache();
                 } else {
                     // failed
                 }
-
+            } else {
+                mPreview = new CameraPreview(this, mCamera);
             }
         }
 
